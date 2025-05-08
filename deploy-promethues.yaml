@@ -1,0 +1,74 @@
+---
+- hosts: localhost
+  gather_facts: false
+  environment:
+    - K8S_AUTH_KUBECONFIG: ./config
+  tasks:
+    - name: Create monitoring namespace
+      kubernetes.core.k8s:
+        name: monitoring
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: Add helm repo
+      kubernetes.core.helm_repository:
+        name: prometheus-community
+        url: https://prometheus-community.github.io/helm-charts
+        state: present
+
+    - name: Deploy prometheus
+      kubernetes.core.helm:
+        name: prometheus
+        chart_ref: prometheus-community/kube-prometheus-stack
+        namespace: monitoring
+        values:
+          prometheus:
+            enabled: true
+            persistence:
+              enabled: true
+              storageClass: standard
+              size: 10Gi
+            service:
+              type: NodePort
+          grafana:
+            enabled: true
+            adminPassword: "{{ admin_password }}"
+            adminUser: "{{ admin_user }}"
+            persistence:
+              storageClass: "{{ storage_class }}"
+              size: 10Gi
+            service:
+              type: NodePort
+        state: present
+
+    - name: Create argocd namespace
+      kubernetes.core.k8s:
+        name: argocd
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: Add helm repo
+      kubernetes.core.helm_repository:
+        name: argo-cd
+        url: https://argoproj.github.io/argo-helm
+        state: present
+
+    - name: Install argo-cd
+      kubernetes.core.helm:
+        name: argo-cd
+        chart_ref: argo-cd/argo-cd
+        namespace: argocd
+        state: present
+        values:
+          adminPassword: "{{ admin_password }}"
+          adminUser: "{{ admin_user }}"
+          persistence:
+            storageClass: standard
+            size: 10Gi
+    - name: Deploy metrics-server
+      kubernetes.core.k8s:
+        namespace: kube-system
+        src: ./metrics-server.yaml
+        state: present

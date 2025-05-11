@@ -1,0 +1,78 @@
+---
+- hosts: localhost
+  gather_facts: false
+  collections:
+    - kubernetes.core
+  vars:
+    metallb_namespace: metallb-system
+    metallb_address_pool: ip-pool
+  environment:
+    - K8S_AUTH_KUBECONFIG: ./config
+  tasks:
+  - name: Create namespace if it doesn't exist
+    k8s:
+      name: "{{ metallb_namespace }}"
+      api_version: v1
+      kind: Namespace
+      state: present
+  - name: Install metallb
+    k8s:
+      namespace: "{{ metallb_namespace }}"
+      src: https://raw.githubusercontent.com/metallb/metallb/v0.14.9/config/manifests/metallb-native.yaml
+      state: present
+
+  - name: Wait for MetalLB controller pods to be ready
+    k8s_info:
+      kind: Pod
+      namespace: "{{ metallb_namespace }}"
+      label_selectors:
+        - app.kubernetes.io/name=metallb
+        - app.kubernetes.io/component=controller
+      wait: yes
+      wait_condition:
+        type: Ready
+        status: "True"
+      wait_timeout: 120
+
+  - name: Wait for MetalLB speaker pods to be ready
+    k8s_info:
+      kind: Pod
+      namespace: "{{ metallb_namespace }}"
+      label_selectors:
+        - app.kubernetes.io/name=metallb
+        - app.kubernetes.io/component=speaker
+      wait: yes
+      wait_condition:
+        type: Ready
+        status: "True"
+      wait_timeout: 120
+
+  - name: Create metallb ipaddresspool
+    k8s:
+      name: my-ip-pool
+      api_version: metallb.io/v1beta1
+      kind: IPAddressPool
+      namespace: "{{ metallb_namespace }}"
+      state: present
+      definition:
+        metadata:
+          name: my-ip-pool
+          namespace: "{{ metallb_namespace }}"
+        spec:
+          addresses:
+            - "{{ metallb_address_pool }}"
+
+  - name: Create metallb l2advertisement
+    k8s:
+      name: l2-advertisement
+      api_version: metallb.io/v1beta1
+      kind: L2Advertisement
+      namespace: "{{ metallb_namespace }}"
+      state: present
+      definition:
+        metadata:
+          name: l2-advertisement
+          namespace: "{{ metallb_namespace }}"
+        spec:
+          ipAddressPools:
+            - my-ip-pool

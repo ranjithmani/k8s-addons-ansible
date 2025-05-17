@@ -41,34 +41,3 @@
             service:
               type: NodePort
         state: present
-
-    - name: Create argocd namespace
-      kubernetes.core.k8s:
-        name: argocd
-        api_version: v1
-        kind: Namespace
-        state: present
-
-    - name: Add helm repo
-      kubernetes.core.helm_repository:
-        name: argo-cd
-        url: https://argoproj.github.io/argo-helm
-        state: present
-
-    - name: Install argo-cd
-      kubernetes.core.helm:
-        name: argo-cd
-        chart_ref: argo-cd/argo-cd
-        namespace: argocd
-        state: present
-        values:
-          adminPassword: "{{ admin_password }}"
-          adminUser: "{{ admin_user }}"
-          persistence:
-            storageClass: standard
-            size: 10Gi
-    - name: Deploy metrics-server
-      kubernetes.core.k8s:
-        namespace: kube-system
-        src: ./metrics-server.yaml
-        state: present

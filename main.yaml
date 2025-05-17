@@ -1,0 +1,38 @@
+---
+- name: Deploy Kubernetes Addons
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Include metrics-server deployment
+      ansible.builtin.import_playbook: metrics-server.yaml
+      tags: 
+        - metrics-server
+        - monitoring
+
+    - name: Include Argo Workflows deployment
+      ansible.builtin.import_playbook: deploy-argo.yaml
+      tags:
+        - argo
+        - workflows
+        - cicd
+
+    - name: Include Loki deployment
+      ansible.builtin.import_playbook: deploy-loki.yaml
+      tags:
+        - loki
+        - logging
+        - monitoring
+
+    - name: Include MetalLB deployment
+      ansible.builtin.import_playbook: deploy-metallb.yaml
+      tags:
+        - metallb
+        - networking
+        - loadbalancer
+
+    - name: Include Prometheus deployment
+      ansible.builtin.import_playbook: deploy-promethues.yaml
+      tags:
+        - prometheus
+        - monitoring
+        - metrics 

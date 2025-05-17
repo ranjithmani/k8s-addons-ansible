@@ -1,0 +1,51 @@
+---
+- hosts: localhost
+  gather_facts: false
+  environment:
+    - K8S_AUTH_KUBECONFIG: ./config
+  vars:
+    ARGO_WORKFLOWS_VERSION: v3.6.7
+  tasks:
+    - name: Create argocd namespace
+      kubernetes.core.k8s:
+        name: argocd
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: Add helm repo
+      kubernetes.core.helm_repository:
+        name: argo-cd
+        url: https://argoproj.github.io/argo-helm
+        state: present
+
+    - name: Install argo-cd
+      kubernetes.core.helm:
+        name: argo-cd
+        chart_ref: argo-cd/argo-cd
+        namespace: argocd
+        state: present
+    - name: create argo namespace
+      kubernetes.core.k8s:
+        name: argo
+        api_version: v1
+        kind: Namespace
+        state: present
+    - name: deploy argo workflow
+      k8s:
+        name: argo-workflows
+        src: "https://github.com/argoproj/argo-workflows/releases/download/{{ARGO_WORKFLOWS_VERSION }}/quick-start-minimal.yaml"
+        namespace: argo
+        state: present
+    - name: create argo-events namespace
+      kubernetes.core.k8s:
+        name: argo-events
+        api_version: v1
+        kind: Namespace
+        state: present
+    - name: deploy argo-events
+      kubernetes.core.helm:
+        name: argo-events
+        chart_ref: argo-cd/argo-events
+        namespace: argo-events
+        state: present

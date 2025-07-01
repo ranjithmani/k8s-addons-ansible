@@ -1,0 +1,88 @@
+name: build_image_test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Workflow Repo
+        uses: actions/checkout@v4
+
+      - name: Check Ubuntu Version
+        run: |
+          echo "Ubuntu Version:"
+          cat /etc/os-release
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3.10 python3.10-venv python3.10-dev python3-pip \
+            make qemu-system-x86 \
+            qemu-kvm libvirt-daemon-system libvirt-clients virtinst cpu-checker libguestfs-tools libosinfo-bin
+          sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+          sudo update-alternatives --set python3 /usr/bin/python3.10
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --user ansible-core
+          echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
+          export PATH=$HOME/.local/bin:$PATH
+          python3 --version
+          ansible --version
+          sudo chown $(whoami):$(whoami) /dev/kvm
+          sudo chmod 600 /dev/kvm
+
+      - name: Verify KVM and Virtualization Support
+        run: |
+          echo "Checking if KVM is enabled..."
+          kvm-ok || (echo "KVM is not enabled! Check virtualization settings." && exit 1)
+          echo "Checking QEMU version..."
+          qemu-system-x86_64 --version
+          echo "Checking libvirt status..."
+          sudo systemctl status libvirtd || echo "libvirtd service is not active"
+
+      - name: Clone Image Builder Repo
+        run: |
+          git clone https://github.com/kubernetes-sigs/image-builder.git ~/image-builder
+
+      - name: Apply customization to image-builder
+        run: |
+          IMGURL=$(grep IMAGE_URL img-pipeline/image_vars.yml |awk '{print $2}')
+          yq  -i ".iso_url = \"${IMGURL}\"" ~/image-builder/images/capi/packer/raw/raw-ubuntu-2204-efi.json
+      
+      - name: Build Image
+        run: |
+          export HOME=~
+          export PATH=$HOME/.local/bin:$HOME/image-builder/images/capi/.local/bin:$PATH
+          cd ~/image-builder/images/capi
+
+          # Enable logging for debugging
+          export PACKER_LOG=1
+
+          make deps-raw
+          make build-raw-ubuntu-2204-efi
+          ls -lh ~/image-builder/images/capi/output
+
+      - name: Configure minio endpoint
+        run: |
+          sudo curl http://<minio>:9000/images/mc --create-dirs -o /usr/local/bin/mc
+          sudo chmod +x /usr/local/bin/mc
+          mc alias set myminio http://<minio>:9000 <user> <passwd>
+      - name: Install trivy
+        run: |
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt update
+          sudo apt install trivy -y
+
+      - name: Scan the image for vulenarability and upload to minio
+        run: |
+          cd ~/image-builder/images/capi/output/
+          file=$(ls -l | grep ^d|awk '{print $9}')
+          mc cp ${file}.gz myminio/images
+          cd ${file}
+          trivy vm  -o ${file}.txt --ignore-unfixed -s HIGH,CRITICAL "${file}"
+          mc cp ${file}.txt myminio/images
+          cd ..
+          rm -rf $file ${file}.gz

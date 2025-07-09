@@ -1,0 +1,35 @@
+- name: Disable SSH root login
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PermitRootLogin'
+    line: 'PermitRootLogin no'
+    state: present
+    create: yes
+    backup: yes
+  notify: Restart SSH
+
+- name: Set secure permissions on /etc/passwd
+  file:
+    path: /etc/passwd
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Set secure permissions on /etc/shadow
+  file:
+    path: /etc/shadow
+    owner: root
+    group: shadow
+    mode: '0640'
+
+- name: Disable cramfs module
+  lineinfile:
+    path: /etc/modprobe.d/cramfs.conf
+    line: 'install cramfs /bin/true'
+    create: yes
+
+- name: Disable squashfs module
+  lineinfile:
+    path: /etc/modprobe.d/squashfs.conf
+    line: 'install squashfs /bin/true'
+    create: yes

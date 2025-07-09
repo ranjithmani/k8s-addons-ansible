@@ -1,0 +1,97 @@
+name: Admin Server Prepare
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_ip:
+        description: 'Admin Server IP'
+        required: true
+      ssh_user:
+        description: 'SSH Username'
+        required: true
+      ssh_pass:
+        description: 'SSH Password'
+        required: true
+      first_run:
+        description: 'Is this the first run'
+        required: true
+        type: boolean
+        default: false
+      run_patch:
+        description: 'Apply patching?'
+        required: false
+        type: boolean
+        default: false
+      run_audit:
+        description: 'Apply audit?'
+        required: false
+        type: boolean
+        default: false
+      run_harden:
+        description: 'Apply hardening?'
+        required: false
+        type: boolean
+        default: false
+      run_addons:
+        description: 'Apply Admin prepare tasks?'
+        required: false
+        type: boolean
+        default: false
+      runner_name:
+        type: string
+        description: 'Github Runner'
+        required: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible and sshpass
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip sshpass
+          pip3 install --upgrade pip setuptools
+          pip3 install ansible
+
+      - name: Create dynamic inventory
+        run: |
+          touch inventory.ini
+          echo "[all]" >> inventory.ini
+          echo "${{ inputs.server_ip }} ansible_user=${{ inputs.ssh_user }} ansible_ssh_pass=${{ inputs.ssh_pass }} ansible_become_pass=${{ inputs.ssh_pass }} ansible_connection=ssh ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> inventory.ini
+
+      - name: Check roles for first run.
+        id: first
+        run: |
+          ROLES=""
+          if [ "${{ inputs.first_run }}" = "true" ]; then
+            ROLES="PATCH AUDIT HARDEN ADDONS"
+          fi
+          echo "roles=$ROLES" >> $GITHUB_OUTPUT
+      - name: Build selected role list
+        id: roles
+        run: |
+          ROLES="${{ steps.first.outputs.roles }}"
+          if [ "${{ inputs.run_patch }}" = "true" ]; then
+            ROLES="$ROLES PATCH"
+          fi
+          if [ "${{ inputs.run_audit }}" = "true" ]; then
+            ROLES="$ROLES AUDIT"
+          fi
+          if [ "${{ inputs.run_harden }}" = "true" ]; then
+            ROLES="$ROLES HARDEN"
+          fi
+          if [ "${{ inputs.run_addons }}" = "true" ]; then
+            ROLES="$ROLES ADDONS"
+          fi
+          echo "roles=$ROLES" >> $GITHUB_OUTPUT
+
+      - name: Run Ansible playbook with selected roles
+        run: |
+          ansible-playbook -i inventory.ini playbook.yml \
+            -e "selected_roles='${{ steps.roles.outputs.roles }}'" \
+            -e "ADMIN_USER=${{ inputs.ssh_user }}" \
+            --extra-vars "ansible_python_interpreter=/usr/bin/python3"

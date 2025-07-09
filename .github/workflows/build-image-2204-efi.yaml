@@ -59,16 +59,22 @@ jobs:
 
       - name: Configure minio endpoint
         run: |
+          if [ ! -f  /usr/local/bin/mc ]
+          then
           sudo curl ${{ secrets.minio_url }}/images/mc --create-dirs -o /usr/local/bin/mc
           sudo chmod +x /usr/local/bin/mc
           mc alias set myminio ${{ secrets.minio_url }} ${{ secrets.minio_user }} ${{ secrets.minio_pass }}
+          fi
 
       - name: Install trivy
         run: |
+          if [ ! -f /usr/bin/trivy ]
+          then
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
           echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt update
           sudo apt install trivy -y
+          fi
 
       - name: Scan the image for vulenarability and upload to minio
         run: |

@@ -1,0 +1,49 @@
+- name: Install auditd package
+  apt:
+    name: auditd
+    state: present
+    update_cache: yes
+
+- name: Ensure auditd service is running and enabled at boot
+  service:
+    name: auditd
+    state: started
+    enabled: yes
+
+- name: Configure auditd to log user commands
+  lineinfile:
+    path: /etc/audit/rules.d/audit.rules
+    line: '-a always,exit -F arch=b64 -S execve'
+    create: yes
+    state: present
+
+- name: Configure auditd to log user commands (32-bit architecture)
+  lineinfile:
+    path: /etc/audit/rules.d/audit.rules
+    line: '-a always,exit -F arch=b32 -S execve'
+    create: yes
+    state: present
+
+- name: Enable the rules
+  shell: /usr/sbin/augenrules
+  notify:
+    - restart auditd
+
+- name: Configure log rotation for auditd logs
+  copy:
+    dest: /etc/logrotate.d/auditd
+    content: |
+      /var/log/audit/audit.log {
+        weekly
+        rotate 4
+        size 100M
+        compress
+        delaycompress
+        notifempty
+        create 0600 root root
+        postrotate
+          /usr/sbin/service auditd reload > /dev/null 2>&1 || true
+        endscript
+      }
+  notify:
+    - restart auditd

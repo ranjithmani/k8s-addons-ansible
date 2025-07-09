@@ -1,0 +1,68 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+- name: Install yq
+  shell: |
+    wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+    chmod +x /usr/local/bin/yq
+  args:
+    creates: /usr/local/bin/yq
+
+- name: Install required dependencies
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+  notify:
+    - Start Docker
+
+- name: Install kubectl
+  shell: |
+    curl -LO "https://dl.k8s.io/release/{{ KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
+    mv ./kubectl /usr/local/bin/kubectl
+    chmod +x /usr/local/bin/kubectl
+  args:
+    creates: /usr/local/bin/kubectl
+
+- name: Install kind
+  shell: |
+    curl -Lo ./kind "https://github.com/kubernetes-sigs/kind/releases/download/{{ KIND_VERSION }}/kind-linux-amd64"
+    mv ./kind /usr/local/bin/kind
+    chmod +x /usr/local/bin/kind
+  args:
+    creates: /usr/local/bin/kind
+
+- name: Install eksctl
+  shell: |
+    curl --silent --location "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
+    mv /tmp/eksctl /usr/local/bin/eksctl
+    chmod +x /usr/local/bin/eksctl
+  args:
+    creates: /usr/local/bin/eksctl
+
+# Install eksctl-anywhere
+- name: Install eksctl-anywhere
+  shell: |
+    curl --silent --location "https://anywhere-assets.eks.amazonaws.com/releases/eks-a/99/artifacts/eks-a/{{ EKSCTL_PLUGIN_VERSION }}/linux/amd64/eksctl-anywhere-{{ EKSCTL_PLUGIN_VERSION }}-linux-amd64.tar.gz"| tar xz ./eksctl-anywhere
+    mv  ./eksctl-anywhere  /usr/local/bin/
+  args:
+    creates: /usr/local/bin/eksctl-anywhere
+  tags: install
+
+- name: Add user to groups
+  user:
+    name: "{{ ADMIN_USER }}"
+    groups:
+      - sudo
+      - docker
+    append: yes
+  tags: install

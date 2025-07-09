@@ -1,0 +1,73 @@
+- name: Check for available updates
+  shell: apt list --upgradable 2>/dev/null | grep -v "Listing..." | wc -l
+  register: upgradable_count
+  changed_when: false
+
+- name: FAIL if no updates are available
+  fail:
+    msg: "No updates available. Skipping patch process."
+  when: (upgradable_count.stdout | int) == 0
+
+- name: PRECHECK - Show current kernel version
+  command: uname -r
+  register: kernel_version_before
+  changed_when: false
+
+- name: PRECHECK - Show filesystem usage
+  command: df -h {{ fs_path }}
+  register: fs_usage_before
+  changed_when: false
+
+- name: PRECHECK - Check filesystem usage percentage
+  shell: |
+    df -P {{ fs_path }} | awk 'NR==2 {print $5}' | sed 's/%//'
+  register: fs_usage_percent
+  changed_when: false
+
+- name: FAIL if FS usage exceeds {{ max_fs_usage }}%
+  fail:
+    msg: "Filesystem usage is above threshold: {{ fs_usage_percent.stdout }}%"
+  when: (fs_usage_percent.stdout | int) > (max_fs_usage | int)
+
+- name: PATCH - Update apt cache
+  apt:
+    update_cache: yes
+
+- name: PATCH - Upgrade all packages
+  apt:
+    upgrade: dist
+    autoremove: yes
+    autoclean: yes
+
+- name: REBOOT - Reboot the server
+  reboot:
+    reboot_timeout: 900
+
+- name: POSTCHECK - Wait for server to come back online
+  wait_for_connection:
+    connect_timeout: 10
+    sleep: 5
+    delay: 10
+    timeout: 300
+
+- name: POSTCHECK - Show new kernel version
+  command: uname -r
+  register: kernel_version_after
+  changed_when: false
+
+- name: POSTCHECK - Show filesystem usage after patch
+  command: df -h {{ fs_path }}
+  register: fs_usage_after
+  changed_when: false
+
+- name: Print Summary
+  debug:
+    msg: |
+      Pre-patch Kernel : {{ kernel_version_before.stdout }}
+      Post-patch Kernel: {{ kernel_version_after.stdout }}
+
+      FS Usage Before:
+      {{ fs_usage_before.stdout }}
+
+      FS Usage After:
+      {{ fs_usage_after.stdout }}

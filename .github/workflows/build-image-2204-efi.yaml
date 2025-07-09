@@ -59,9 +59,9 @@ jobs:
 
       - name: Configure minio endpoint
         run: |
-          sudo curl http://172.29.144.12:9000/images/mc --create-dirs -o /usr/local/bin/mc
+          sudo curl ${{ secrets.minio_url }}/images/mc --create-dirs -o /usr/local/bin/mc
           sudo chmod +x /usr/local/bin/mc
-          mc alias set myminio http://172.29.144.12:9000 admin minio123
+          mc alias set myminio ${{ secrets.minio_url }} ${{ secrets.minio_user }} ${{ secrets.minio_pass }}
 
       - name: Install trivy
         run: |

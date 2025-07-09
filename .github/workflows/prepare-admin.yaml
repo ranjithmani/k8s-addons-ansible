@@ -43,8 +43,8 @@ on:
         required: false
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  builds:
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code

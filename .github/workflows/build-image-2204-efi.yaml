@@ -52,7 +52,7 @@ jobs:
 
           # Enable logging for debugging
           # export PACKER_LOG=1
-          make clean
+          # make clean
           make deps-raw
           make build-raw-ubuntu-2204-efi
           ls -lh output

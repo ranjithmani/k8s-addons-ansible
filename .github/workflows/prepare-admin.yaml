@@ -52,6 +52,9 @@ jobs:
           sudo apt install -y python3-pip sshpass
           pip3 install --upgrade pip setuptools
           pip3 install ansible
+          
+      - name: Add ~/.local/bin to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Create dynamic inventory
         run: |

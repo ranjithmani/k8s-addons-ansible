@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     runs-on: self-hosted
     steps:
 
@@ -85,8 +85,8 @@ jobs:
           mc cp ${file}.gz myminio/images
           cd ${file}
           trivy vm  --format json --output ${file}.json --ignore-unfixed -s HIGH,CRITICAL,MEDIUM  "${file}"
+          sleep 20
           mc cp ${file}.json myminio/images
-          echo "count=$(grep VulnerabilityID ${file}.json | wc -l)" >> "$GITHUB_OUTPUT"
           cd ..
           rm -rf $file ${file}.gz
 

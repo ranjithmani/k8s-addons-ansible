@@ -16,6 +16,8 @@
       - curl
       - gnupg
       - lsb-release
+      - jq
+      - fping
     state: present
 
 - name: Install Docker

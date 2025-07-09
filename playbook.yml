@@ -1,0 +1,9 @@
+- name: Apply selected roles
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Include selected roles
+      include_role:
+        name: "{{ item }}"
+      loop: "{{ selected_roles.split() }}"

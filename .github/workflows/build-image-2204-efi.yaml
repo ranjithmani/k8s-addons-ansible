@@ -43,6 +43,8 @@ jobs:
           echo "Checking libvirt status..."
           sudo systemctl status libvirtd || echo "libvirtd service is not active"
 
+      - name: Add ~/.local/bin to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Build Image
         run: |

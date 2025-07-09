@@ -5,8 +5,9 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-22.04
+    runs-on: self-hosted
     steps:
+
       - name: Checkout Workflow Repo
         uses: actions/checkout@v4
 
@@ -42,33 +43,26 @@ jobs:
           echo "Checking libvirt status..."
           sudo systemctl status libvirtd || echo "libvirtd service is not active"
 
-      - name: Clone Image Builder Repo
-        run: |
-          git clone https://github.com/kubernetes-sigs/image-builder.git ~/image-builder
 
-      - name: Apply customization to image-builder
-        run: |
-          IMGURL=$(grep IMAGE_URL img-pipeline/image_vars.yml |awk '{print $2}')
-          yq  -i ".iso_url = \"${IMGURL}\"" ~/image-builder/images/capi/packer/raw/raw-ubuntu-2204-efi.json
-      
       - name: Build Image
         run: |
           export HOME=~
-          export PATH=$HOME/.local/bin:$HOME/image-builder/images/capi/.local/bin:$PATH
-          cd ~/image-builder/images/capi
+          export PATH=$HOME/.local/bin:image-builder/images/capi/.local/bin:$PATH
+          cd image-builder/images/capi
 
           # Enable logging for debugging
-          export PACKER_LOG=1
-
+          # export PACKER_LOG=1
+          make clean
           make deps-raw
           make build-raw-ubuntu-2204-efi
-          ls -lh ~/image-builder/images/capi/output
+          ls -lh output
 
       - name: Configure minio endpoint
         run: |
-          sudo curl http://<minio>:9000/images/mc --create-dirs -o /usr/local/bin/mc
+          sudo curl http://172.29.144.12:9000/images/mc --create-dirs -o /usr/local/bin/mc
           sudo chmod +x /usr/local/bin/mc
-          mc alias set myminio http://<minio>:9000 <user> <passwd>
+          mc alias set myminio http://172.29.144.12:9000 admin minio123
+
       - name: Install trivy
         run: |
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
@@ -78,11 +72,13 @@ jobs:
 
       - name: Scan the image for vulenarability and upload to minio
         run: |
-          cd ~/image-builder/images/capi/output/
+          cd image-builder/images/capi/output/
           file=$(ls -l | grep ^d|awk '{print $9}')
           mc cp ${file}.gz myminio/images
           cd ${file}
-          trivy vm  -o ${file}.txt --ignore-unfixed -s HIGH,CRITICAL "${file}"
-          mc cp ${file}.txt myminio/images
+          trivy vm  --format json --output ${file}.json --ignore-unfixed -s HIGH,CRITICAL,MEDIUM  "${file}"
+          mc cp ${file}.json myminio/images
+          echo "count=$(grep VulnerabilityID ${file}.json | wc -l)" >> "$GITHUB_OUTPUT"
           cd ..
           rm -rf $file ${file}.gz
+

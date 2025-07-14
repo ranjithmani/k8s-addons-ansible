@@ -84,7 +84,7 @@
 
 - name: Add Dell OpenManage repository
   apt_repository:
-    repo: "deb http://linux.dell.com/repo/community/openmanage/{{ dell_repo_version }}/{{ ubuntu_release }} {{ ubuntu_release }} main"
+    repo: "deb http://linux.dell.com/repo/community/openmanage/{{ DELL_REPO_VERSION }}/{{ UBUNTU_RELEASE }} {{ UBUNTU_RELEASE }} main"
     state: present
     filename: linux.dell.com.sources
     update_cache: yes
@@ -99,12 +99,31 @@
   delay: 5
   until: install_result is success
 
-- name: Verify racadm installation
-  command: racadm --version
-  register: racadm_version
-  changed_when: false
+#Install AZ
+- name: Download Microsoft GPG key
+  get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /tmp/microsoft.asc
+    mode: '0644'
 
-- name: Display racadm version
-  debug:
-    msg: "racadm version: {{ racadm_version.stdout }}"
+- name: Import Microsoft GPG key
+  shell: gpg --dearmor < /tmp/microsoft.asc > /etc/apt/trusted.gpg.d/microsoft.gpg
+  args:
+    creates: /etc/apt/trusted.gpg.d/microsoft.gpg
 
+- name: Add Azure CLI repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ {{ ansible_lsb.codename }} main"
+    state: present
+    filename: azure-cli
+    update_cache: yes
+
+- name: Install Azure CLI
+  apt:
+    name: azure-cli
+    state: present
+    update_cache: yes
+  register: install_result
+  retries: 3
+  delay: 5
+  until: install_result is success

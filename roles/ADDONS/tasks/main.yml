@@ -71,33 +71,33 @@
   tags: install
 
 #Install racadm
-- name: Download Dell GPG key
-  get_url:
-    url: https://linux.dell.com/repo/pgp_pubkeys/0x1285491434D8786F.asc
-    dest: /tmp/dell.asc
-    mode: '0644'
+#- name: Download Dell GPG key
+ # get_url:
+  #  url: https://linux.dell.com/repo/pgp_pubkeys/0x1285491434D8786F.asc
+   # dest: /tmp/dell.asc
+    #mode: '0644'
 
-- name: Import Dell GPG key
-  shell: gpg --dearmor < /tmp/dell.asc > /etc/apt/trusted.gpg.d/dell.gpg
-  args:
-    creates: /etc/apt/trusted.gpg.d/dell.gpg
+#- name: Import Dell GPG key
+#  shell: gpg --dearmor < /tmp/dell.asc > /etc/apt/trusted.gpg.d/dell.gpg
+#  args:
+#    creates: /etc/apt/trusted.gpg.d/dell.gpg
 
-- name: Add Dell OpenManage repository
-  apt_repository:
-    repo: "deb http://linux.dell.com/repo/community/openmanage/{{ DELL_REPO_VERSION }}/{{ UBUNTU_RELEASE }} {{ UBUNTU_RELEASE }} main"
-    state: present
-    filename: linux.dell.com.sources
-    update_cache: yes
+#- name: Add Dell OpenManage repository
+#  apt_repository:
+#    repo: "deb http://linux.dell.com/repo/community/openmanage/{{ DELL_REPO_VERSION }}/{{ UBUNTU_RELEASE }} {{ UBUNTU_RELEASE }} main"
+#    state: present
+#    filename: linux.dell.com.sources
+#    update_cache: yes
 
-- name: Install racadm package
-  apt:
-    name: srvadmin-idracadm8
-    state: present
-    update_cache: yes
-  register: install_result
-  retries: 3
-  delay: 5
-  until: install_result is success
+#- name: Install racadm package
+#  apt:
+#    name: srvadmin-idracadm8
+#    state: present
+#    update_cache: yes
+#  register: install_result
+#  retries: 3
+#  delay: 5
+#  until: install_result is success
 
 #Install AZ
 - name: Download Microsoft GPG key
@@ -113,7 +113,7 @@
 
 - name: Add Azure CLI repository
   apt_repository:
-    repo: "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ {{ ansible_lsb.codename }} main"
+    repo: "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/{{ ansible_lsb.codename }} main"
     state: present
     filename: azure-cli
     update_cache: yes

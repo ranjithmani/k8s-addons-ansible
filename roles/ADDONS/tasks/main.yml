@@ -18,6 +18,7 @@
       - lsb-release
       - jq
       - fping
+      - wget
     state: present
 
 - name: Install Docker
@@ -68,3 +69,42 @@
       - docker
     append: yes
   tags: install
+
+#Install racadm
+- name: Download Dell GPG key
+  get_url:
+    url: https://linux.dell.com/repo/pgp_pubkeys/0x1285491434D8786F.asc
+    dest: /tmp/dell.asc
+    mode: '0644'
+
+- name: Import Dell GPG key
+  shell: gpg --dearmor < /tmp/dell.asc > /etc/apt/trusted.gpg.d/dell.gpg
+  args:
+    creates: /etc/apt/trusted.gpg.d/dell.gpg
+
+- name: Add Dell OpenManage repository
+  apt_repository:
+    repo: "deb http://linux.dell.com/repo/community/openmanage/{{ dell_repo_version }}/{{ ubuntu_release }} {{ ubuntu_release }} main"
+    state: present
+    filename: linux.dell.com.sources
+    update_cache: yes
+
+- name: Install racadm package
+  apt:
+    name: srvadmin-idracadm8
+    state: present
+    update_cache: yes
+  register: install_result
+  retries: 3
+  delay: 5
+  until: install_result is success
+
+- name: Verify racadm installation
+  command: racadm --version
+  register: racadm_version
+  changed_when: false
+
+- name: Display racadm version
+  debug:
+    msg: "racadm version: {{ racadm_version.stdout }}"
+

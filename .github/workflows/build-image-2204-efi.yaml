@@ -91,7 +91,7 @@ jobs:
 
           if [ ${{ github.event.inputs.ubuntu_version }} == '22.04' ]
           then
-          PACKER_ARGS += \
+          export PACKER_ARGS += \
           -var "kubernetes_semver=$(KUBERNETES_SEMVER)" \
           -var "kubernetes_deb_version=$(KUBERNETES_DEB_VERSION)" \
           -var "crictl_version=$(CRICTL_VERSION)" \

@@ -84,19 +84,14 @@ jobs:
           k8ssemver=v${k8sversion}
           k8sdebver=${k8sversion}-1.1
           crictlver=$(echo $k8sversion | awk -F\. '{print $1"."$2".0"}')
-          KUBERNETES_SERIES=$k8sseries
-          KUBERNETES_SEMVER=$k8ssemver
-          KUBERNETES_DEB_VERSION=$k8sdebver
-          CRICTL_VERSION=$crictlver
+          #KUBERNETES_SERIES=$k8sseries
+          #KUBERNETES_SEMVER=$k8ssemver
+          #KUBERNETES_DEB_VERSION=$k8sdebver
+          #CRICTL_VERSION=$crictlver
 
           if [ ${{ github.event.inputs.ubuntu_version }} == '22.04' ]
           then
-          export PACKER_ARGS += \
-          -var "kubernetes_semver=$(KUBERNETES_SEMVER)" \
-          -var "kubernetes_deb_version=$(KUBERNETES_DEB_VERSION)" \
-          -var "crictl_version=$(CRICTL_VERSION)" \
-          -var "kubernetes_series=$(KUBERNETES_SERIES)"
-          make build-raw-ubuntu-2204-efi
+          PACKER_FLAGS="--var 'kubernetes_rpm_version=$k8sdebver' --var 'kubernetes_semver=$k8ssemver' --var 'kubernetes_series=$k8sseries' --var 'kubernetes_deb_version=$k8sdebver'" make build-raw-ubuntu-2204-efi
 
           else
           make build-raw-ubuntu-2404-efi KUBERNETES_SERIES=$k8sseries KUBERNETES_SEMVER=$k8ssemver KUBERNETES_DEB_VERSION=$k8sdebver CRICTL_VERSION=$crictlver

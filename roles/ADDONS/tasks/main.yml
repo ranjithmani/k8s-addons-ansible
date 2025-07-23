@@ -75,7 +75,7 @@
 
 - name: Install temporal CLI
   shell: |
-    curl -LO temporal-cli.tar.gz "https://temporal.download/cli/archive/latest?platform=linux&arch=amd64"
+    wget -O temporal-cli.tar.gz "https://temporal.download/cli/archive/latest?platform=linux&arch=amd64"
     tar xf temporal-cli.tar.gz
     chmod +x temporal
     mv temporal /usr/local/bin/

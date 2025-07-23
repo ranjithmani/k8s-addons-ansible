@@ -69,7 +69,7 @@
     append: yes
 
 - name: Install AZ CLI
-  command: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  shell: curl -sL https://aka.ms/InstallAzureCLIDeb | bash
   args:
     creates: /usr/bin/az
 

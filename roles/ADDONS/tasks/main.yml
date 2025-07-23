@@ -54,7 +54,7 @@
 # Install eksctl-anywhere
 - name: Install eksctl-anywhere
   shell: |
-    curl --silent --location "https://anywhere-assets.eks.amazonaws.com/releases/eks-a/99/artifacts/eks-a/{{ EKSCTL_PLUGIN_VERSION }}/linux/amd64/eksctl-anywhere-{{ EKSCTL_PLUGIN_VERSION }}-linux-amd64.tar.gz" | tar xz ./eksctl-anywhere
+    curl --silent --location "https://anywhere-assets.eks.amazonaws.com/releases/eks-a/88/artifacts/eks-a/{{ EKSCTL_PLUGIN_VERSION }}/linux/amd64/eksctl-anywhere-{{ EKSCTL_PLUGIN_VERSION }}-linux-amd64.tar.gz" | tar xz ./eksctl-anywhere
     mv  ./eksctl-anywhere  /usr/local/bin/
   args:
     creates: /usr/local/bin/eksctl-anywhere

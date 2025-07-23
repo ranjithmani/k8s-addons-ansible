@@ -18,7 +18,6 @@
       - lsb-release
       - jq
       - fping
-      - wget
     state: present
 
 - name: Install Docker
@@ -55,7 +54,7 @@
 # Install eksctl-anywhere
 - name: Install eksctl-anywhere
   shell: |
-    curl --silent --location "https://anywhere-assets.eks.amazonaws.com/releases/eks-a/99/artifacts/eks-a/{{ EKSCTL_PLUGIN_VERSION }}/linux/amd64/eksctl-anywhere-{{ EKSCTL_PLUGIN_VERSION }}-linux-amd64.tar.gz"| tar xz ./eksctl-anywhere
+    curl --silent --location "https://anywhere-assets.eks.amazonaws.com/releases/eks-a/99/artifacts/eks-a/{{ EKSCTL_PLUGIN_VERSION }}/linux/amd64/eksctl-anywhere-{{ EKSCTL_PLUGIN_VERSION }}-linux-amd64.tar.gz" | tar xz ./eksctl-anywhere
     mv  ./eksctl-anywhere  /usr/local/bin/
   args:
     creates: /usr/local/bin/eksctl-anywhere
@@ -68,62 +67,18 @@
       - sudo
       - docker
     append: yes
-  tags: install
 
-#Install racadm
-#- name: Download Dell GPG key
- # get_url:
-  #  url: https://linux.dell.com/repo/pgp_pubkeys/0x1285491434D8786F.asc
-   # dest: /tmp/dell.asc
-    #mode: '0644'
-
-#- name: Import Dell GPG key
-#  shell: gpg --dearmor < /tmp/dell.asc > /etc/apt/trusted.gpg.d/dell.gpg
-#  args:
-#    creates: /etc/apt/trusted.gpg.d/dell.gpg
-
-#- name: Add Dell OpenManage repository
-#  apt_repository:
-#    repo: "deb http://linux.dell.com/repo/community/openmanage/{{ DELL_REPO_VERSION }}/{{ UBUNTU_RELEASE }} {{ UBUNTU_RELEASE }} main"
-#    state: present
-#    filename: linux.dell.com.sources
-#    update_cache: yes
-
-#- name: Install racadm package
-#  apt:
-#    name: srvadmin-idracadm8
-#    state: present
-#    update_cache: yes
-#  register: install_result
-#  retries: 3
-#  delay: 5
-#  until: install_result is success
-
-#Install AZ
-- name: Download Microsoft GPG key
-  get_url:
-    url: https://packages.microsoft.com/keys/microsoft.asc
-    dest: /tmp/microsoft.asc
-    mode: '0644'
-
-- name: Import Microsoft GPG key
-  shell: gpg --dearmor < /tmp/microsoft.asc > /etc/apt/trusted.gpg.d/microsoft.gpg
+- name: Install AZ CLI
+  command: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
   args:
-    creates: /etc/apt/trusted.gpg.d/microsoft.gpg
+    creates: /usr/bin/az
 
-- name: Add Azure CLI repository
-  apt_repository:
-    repo: "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/{{ ansible_lsb.codename }} main"
-    state: present
-    filename: azure-cli
-    update_cache: yes
-
-- name: Install Azure CLI
-  apt:
-    name: azure-cli
-    state: present
-    update_cache: yes
-  register: install_result
-  retries: 3
-  delay: 5
-  until: install_result is success
+- name: Install temporal CLI
+  shell: |
+    curl -LO temporal-cli.tar.gz "https://temporal.download/cli/archive/latest?platform=linux&arch=amd64"
+    tar xf temporal-cli.tar.gz
+    chmod +x temporal
+    mv temporal /usr/local/bin/
+    rm -f temporal-cli.tar.gz
+  args:
+    creates: /usr/local/bin/temporal

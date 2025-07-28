@@ -84,6 +84,12 @@
   args:
     creates: /usr/local/bin/temporal
 
+- name: Check if racadm is already installed
+  command: which racadm
+  register: racadm_check
+  changed_when: false
+  failed_when: false
+
 - name: Install racadm if not already installed
   block:
 
@@ -129,9 +135,3 @@
   when: racadm_check.rc != 0
   tags: racadm
 
-- name: Check if racadm is already installed
-  command: which racadm
-  register: racadm_check
-  changed_when: false
-  failed_when: false
-  

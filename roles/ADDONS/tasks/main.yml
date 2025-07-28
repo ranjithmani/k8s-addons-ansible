@@ -84,12 +84,54 @@
   args:
     creates: /usr/local/bin/temporal
 
-- name: Install Racadm
-  shell: |
-    wget  https://armadaosimages.blob.core.windows.net/packages/srvadmin-hapi_11.0.0.0_amd64.deb
-    apt install -y srvadmin-hapi_11.0.0.0_amd64.deb 
-    wget https://armadaosimages.blob.core.windows.net/packages/srvadmin-idracadm7_11.0.0.0_all.deb
-    apt install -y srvadmin-idracadm7_11.0.0.0_all.deb 
-    wget https://armadaosimages.blob.core.windows.net/packages/srvadmin-idracadm8_11.0.0.0_amd64.deb
-    apt install -y srvadmin-idracadm8_11.0.0.0_amd64.deb
+- name: Install racadm if not already installed
+  block:
+
+    - name: Download srvadmin-hapi package
+      get_url:
+        url: https://armadaosimages.blob.core.windows.net/packages/srvadmin-hapi_11.0.0.0_amd64.deb
+        dest: /tmp/srvadmin-hapi_11.0.0.0_amd64.deb
+
+    - name: Download srvadmin-idracadm7 package
+      get_url:
+        url: https://armadaosimages.blob.core.windows.net/packages/srvadmin-idracadm7_11.0.0.0_all.deb
+        dest: /tmp/srvadmin-idracadm7_11.0.0.0_all.deb
+
+    - name: Download srvadmin-idracadm8 package
+      get_url:
+        url: https://armadaosimages.blob.core.windows.net/packages/srvadmin-idracadm8_11.0.0.0_amd64.deb
+        dest: /tmp/srvadmin-idracadm8_11.0.0.0_amd64.deb
+
+    - name: Install downloaded deb packages
+      apt:
+        deb: "{{ item }}"
+        state: present
+      loop:
+        - /tmp/srvadmin-hapi_11.0.0.0_amd64.deb
+        - /tmp/srvadmin-idracadm7_11.0.0.0_all.deb
+        - /tmp/srvadmin-idracadm8_11.0.0.0_amd64.deb
+
+    - name: Fix broken dependencies if any
+      apt:
+        update_cache: yes
+        upgrade: no
+        force: yes
+
+    - name: Remove downloaded deb files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/srvadmin-hapi_11.0.0.0_amd64.deb
+        - /tmp/srvadmin-idracadm7_11.0.0.0_all.deb
+        - /tmp/srvadmin-idracadm8_11.0.0.0_amd64.deb
+
+  when: racadm_check.rc != 0
+  tags: racadm
+
+- name: Check if racadm is already installed
+  command: which racadm
+  register: racadm_check
+  changed_when: false
+  failed_when: false
   

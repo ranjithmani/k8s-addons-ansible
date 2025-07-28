@@ -32,6 +32,19 @@ on:
         required: false
         type: boolean
         default: false
+      eksctl_plugin:
+        description: 'EKSCTL Plugin Version'
+        required: false
+        type: choice
+        options:
+          - v0.20.11 
+          - v0.21.5
+          - v0.21.6
+          - v0.21.7
+          - v0.22.0
+          - v0.22.1
+          - v0.22.2
+        default: v0.20.11
 
 jobs:
   builds:
@@ -80,4 +93,5 @@ jobs:
           ansible-playbook -i inventory.ini playbook.yml \
             -e "selected_roles='${{ steps.roles.outputs.roles }}'" \
             -e "ADMIN_USER=${{ inputs.ssh_user }}" \
+            -e "EKSCTL_PLUGIN_VERSION=${{ inputs.eksctl_version }}" \ 
             --extra-vars "ansible_python_interpreter=/usr/bin/python3"

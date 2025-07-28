@@ -86,5 +86,10 @@
 
 - name: Install Racadm
   shell: |
-    apt install -y https://armadaosimages.blob.core.windows.net/packages/srvadmin-hapi_11.0.0.0_amd64.deb https://armadaosimages.blob.core.windows.net/packages/srvadmin-idracadm7_11.0.0.0_all.deb https://armadaosimages.blob.core.windows.net/packages/srvadmin-idracadm8_11.0.0.0_amd64.deb
+    wget  https://armadaosimages.blob.core.windows.net/packages/srvadmin-hapi_11.0.0.0_amd64.deb
+    apt install -y srvadmin-hapi_11.0.0.0_amd64.deb 
+    wget https://armadaosimages.blob.core.windows.net/packages/srvadmin-idracadm7_11.0.0.0_all.deb
+    apt install -y srvadmin-idracadm7_11.0.0.0_all.deb 
+    wget https://armadaosimages.blob.core.windows.net/packages/srvadmin-idracadm8_11.0.0.0_amd64.deb
+    apt install -y srvadmin-idracadm8_11.0.0.0_amd64.deb
   

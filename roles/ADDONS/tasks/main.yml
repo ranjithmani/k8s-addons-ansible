@@ -83,3 +83,8 @@
     rm -f temporal-cli.tar.gz
   args:
     creates: /usr/local/bin/temporal
+
+- name: Install Racadm
+  shell: |
+    apt install -y https://armadaosimages.blob.core.windows.net/packages/srvadmin-hapi_11.0.0.0_amd64.deb https://armadaosimages.blob.core.windows.net/packages/srvadmin-idracadm7_11.0.0.0_all.deb https://armadaosimages.blob.core.windows.net/packages/srvadmin-idracadm8_11.0.0.0_amd64.deb
+  

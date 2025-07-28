@@ -12,11 +12,6 @@ on:
       ssh_pass:
         description: 'SSH Password'
         required: true
-      first_run:
-        description: 'Is this the first run'
-        required: true
-        type: boolean
-        default: false
       run_patch:
         description: 'Apply patching?'
         required: false
@@ -62,14 +57,6 @@ jobs:
           echo "[all]" >> inventory.ini
           echo "${{ inputs.server_ip }} ansible_user=${{ inputs.ssh_user }} ansible_ssh_pass=${{ inputs.ssh_pass }} ansible_become_pass=${{ inputs.ssh_pass }} ansible_connection=ssh ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> inventory.ini
 
-      - name: Check roles for first run.
-        id: first
-        run: |
-          ROLES=""
-          if [ "${{ inputs.first_run }}" = "true" ]; then
-            ROLES="PATCH AUDIT HARDEN ADDONS"
-          fi
-          echo "roles=$ROLES" >> $GITHUB_OUTPUT
       - name: Build selected role list
         id: roles
         run: |

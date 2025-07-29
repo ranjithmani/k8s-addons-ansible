@@ -93,5 +93,4 @@ jobs:
           ansible-playbook -i inventory.ini playbook.yml \
             -e "selected_roles='${{ steps.roles.outputs.roles }}'" \
             -e "ADMIN_USER=${{ inputs.ssh_user }}" \
-            -e "EKSCTL_PLUGIN_VERSION=${{ inputs.eksctl_plugin }}" \ 
             --extra-vars "ansible_python_interpreter=/usr/bin/python3"

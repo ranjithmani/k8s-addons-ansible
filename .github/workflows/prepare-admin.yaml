@@ -3,49 +3,11 @@ name: Admin Server Prepare
 on:
   workflow_dispatch:
     inputs:
-      server_ip:
-        description: 'Admin Server IP'
+      config_json:
+        description: 'Configuration JSON string'
         required: true
-      ssh_user:
-        description: 'SSH Username'
-        required: true
-      ssh_pass:
-        description: 'SSH Password'
-        required: true
-      run_patch:
-        description: 'Apply patching?'
-        required: false
-        type: boolean
-        default: false
-      run_audit:
-        description: 'Apply audit?'
-        required: false
-        type: boolean
-        default: false
-      run_harden:
-        description: 'Apply hardening?'
-        required: false
-        type: boolean
-        default: false
-      run_addons:
-        description: 'Apply Admin prepare tasks?'
-        required: false
-        type: boolean
-        default: false
-      eksctl_plugin:
-        description: 'EKSCTL Plugin Version'
-        required: false
-        type: choice
-        options:
-          - v0.20.11 
-          - v0.21.5
-          - v0.21.6
-          - v0.21.7
-          - v0.22.0
-          - v0.22.1
-          - v0.22.2
-        default: v0.20.11
-
+        type: string
+  
 jobs:
   builds:
     runs-on: self-hosted
@@ -53,6 +15,36 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Parse JSON config
+        id: parse
+        run: |
+          echo '${{ inputs.config_json }}' > config.json
+
+          export SERVER_IP=$(jq -r '.server_ip' config.json)
+          export SSH_USER=$(jq -r '.ssh_user' config.json)
+          export SSH_PASS=$(jq -r '.ssh_pass' config.json)
+          export RUN_PATCH=$(jq -r '.run_patch // false' config.json)
+          export RUN_AUDIT=$(jq -r '.run_audit // false' config.json)
+          export RUN_HARDEN=$(jq -r '.run_harden // false' config.json)
+          export RUN_ADDONS=$(jq -r '.run_addons // false' config.json)
+          export EKSCTL_PLUGIN=$(jq -r '.eksctl_plugin // "v0.20.11"' config.json)
+
+          echo "SERVER_IP=$SERVER_IP" >> $GITHUB_ENV
+          echo "SSH_USER=$SSH_USER" >> $GITHUB_ENV
+          echo "SSH_PASS=$SSH_PASS" >> $GITHUB_ENV
+          echo "RUN_PATCH=$RUN_PATCH" >> $GITHUB_ENV
+          echo "RUN_AUDIT=$RUN_AUDIT" >> $GITHUB_ENV
+          echo "RUN_HARDEN=$RUN_HARDEN" >> $GITHUB_ENV
+          echo "RUN_ADDONS=$RUN_ADDONS" >> $GITHUB_ENV
+          echo "EKSCTL_PLUGIN=$EKSCTL_PLUGIN" >> $GITHUB_ENV
+      - name: Print config
+        run: |
+          echo "Admin Server IP : $SERVER_IP"
+          echo "Enable Patching : $RUN_PATCH"
+          echo "Enable Auditng  : $RUN_AUDIT"
+          echo "Enable Hardening: $RUN_HARDEN"
+          echo "Apply Addons    : $RUN_ADDONS"
 
       - name: Install Ansible and sshpass
         run: |
@@ -68,22 +60,22 @@ jobs:
         run: |
           touch inventory.ini
           echo "[all]" >> inventory.ini
-          echo "${{ inputs.server_ip }} ansible_user=${{ inputs.ssh_user }} ansible_ssh_pass=${{ inputs.ssh_pass }} ansible_become_pass=${{ inputs.ssh_pass }} ansible_connection=ssh ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> inventory.ini
+          echo "${{ SERVER_IP }} ansible_user=${{ SSH_USER }} ansible_ssh_pass=${{ SSH_PASS }} ansible_become_pass=${{ SSH_PASS }} ansible_connection=ssh ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> inventory.ini
 
       - name: Build selected role list
         id: roles
         run: |
           ROLES="${{ steps.first.outputs.roles }}"
-          if [ "${{ inputs.run_patch }}" = "true" ]; then
+          if [ "${{ RUN_PATCH }}" = "true" ]; then
             ROLES="$ROLES PATCH"
           fi
-          if [ "${{ inputs.run_audit }}" = "true" ]; then
+          if [ "${{ RUN_AUDIT }}" = "true" ]; then
             ROLES="$ROLES AUDIT"
           fi
-          if [ "${{ inputs.run_harden }}" = "true" ]; then
+          if [ "${{ RUN_HARDEN }}" = "true" ]; then
             ROLES="$ROLES HARDEN"
           fi
-          if [ "${{ inputs.run_addons }}" = "true" ]; then
+          if [ "${{ RUN_ADDONS }}" = "true" ]; then
             ROLES="$ROLES ADDONS"
           fi
           echo "roles=$ROLES" >> $GITHUB_OUTPUT
@@ -92,6 +84,6 @@ jobs:
         run: |
           ansible-playbook -i inventory.ini playbook.yml \
             -e "selected_roles='${{ steps.roles.outputs.roles }}'" \
-            -e "ADMIN_USER=${{ inputs.ssh_user }}" \
-            -e "EKSCTL_PLUGIN_VERSION=${{ inputs.eksctl_plugin }}" \
+            -e "ADMIN_USER=${{ SSH_USER }}" \
+            -e "EKSCTL_PLUGIN_VERSION=${{ EKSCTL_PLUGIN }}" \
             --extra-vars "ansible_python_interpreter=/usr/bin/python3"

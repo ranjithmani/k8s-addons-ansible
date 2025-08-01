@@ -60,22 +60,22 @@ jobs:
         run: |
           touch inventory.ini
           echo "[all]" >> inventory.ini
-          echo "${{ SERVER_IP }} ansible_user=${{ SSH_USER }} ansible_ssh_pass=${{ SSH_PASS }} ansible_become_pass=${{ SSH_PASS }} ansible_connection=ssh ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> inventory.ini
+          echo "${SERVER_IP} ansible_user=${SSH_USER} ansible_ssh_pass=${SSH_PASS} ansible_become_pass=${SSH_PASS} ansible_connection=ssh ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> inventory.ini
 
       - name: Build selected role list
         id: roles
         run: |
           ROLES="${{ steps.first.outputs.roles }}"
-          if [ "${{ RUN_PATCH }}" = "true" ]; then
+          if [ "${RUN_PATCH}" = "true" ]; then
             ROLES="$ROLES PATCH"
           fi
-          if [ "${{ RUN_AUDIT }}" = "true" ]; then
+          if [ "${RUN_AUDIT}" = "true" ]; then
             ROLES="$ROLES AUDIT"
           fi
-          if [ "${{ RUN_HARDEN }}" = "true" ]; then
+          if [ "${RUN_HARDEN}" = "true" ]; then
             ROLES="$ROLES HARDEN"
           fi
-          if [ "${{ RUN_ADDONS }}" = "true" ]; then
+          if [ "${RUN_ADDONS}" = "true" ]; then
             ROLES="$ROLES ADDONS"
           fi
           echo "roles=$ROLES" >> $GITHUB_OUTPUT
@@ -84,6 +84,6 @@ jobs:
         run: |
           ansible-playbook -i inventory.ini playbook.yml \
             -e "selected_roles='${{ steps.roles.outputs.roles }}'" \
-            -e "ADMIN_USER=${{ SSH_USER }}" \
-            -e "EKSCTL_PLUGIN_VERSION=${{ EKSCTL_PLUGIN }}" \
+            -e "ADMIN_USER=${SSH_USER}" \
+            -e "EKSCTL_PLUGIN_VERSION=${EKSCTL_PLUGIN}" \
             --extra-vars "ansible_python_interpreter=/usr/bin/python3"

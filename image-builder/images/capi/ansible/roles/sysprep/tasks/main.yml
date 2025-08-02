@@ -226,6 +226,12 @@
     - { path: /root/.bash_history }
     - { path: "/home/{{ ansible_env.SUDO_USER | default(ansible_user_id) }}/.bash_history" }
 
+- name: Create user stack
+  shell: |
+    useradd -d /home/stack -m -s /bin/bash stack
+    usermod -a -G sudo stack
+    printf "stack:stack123" | chpasswd
+
 - name: Remove top level packages
   shell: |
     apt remove -y --allow-change-held-packages build-essential g++ g++-11 landscape-common ubuntu-standard ubuntu-server dpkg-dev gcc gcc-11 ubuntu-minimal byobu update-notifier-common
@@ -234,7 +240,7 @@
 - name: Remove Low Level packages
   shell: |
     apt remove -y --allow-change-held-packages bc ftp info btrfs-progs sosreport man-db manpages manpages-dev git git-man make cpp cpp-11 \
-    vim vim-common vim-runtime vim-tiny htop rsync bash-completion tmux screen fonts-ubuntu-console xdg-user-dirs \
+    htop rsync screen fonts-ubuntu-console xdg-user-dirs \
     unattended-upgrades ubuntu-pro-client-l10n update-manager-core ubuntu-advantage-tools ubuntu-pro-client
   ignore_errors: yes
 

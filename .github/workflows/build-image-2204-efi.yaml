@@ -105,24 +105,10 @@ jobs:
           mc alias set myminio ${{ secrets.minio_url }} ${{ secrets.minio_user }} ${{ secrets.minio_pass }}
           fi
 
-      - name: Install trivy
-        run: |
-          if [ ! -f /usr/bin/trivy ]
-          then
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt update
-          sudo apt install trivy -y
-          fi
 
       - name: Scan the image for vulenarability and upload to minio
         run: |
           cd image-builder/images/capi/output/
           file=$(ls -l | grep ^d|awk '{print $9}')
           mc cp ${file}.gz myminio/images
-          cd ${file}
-          trivy vm  --format json --output ${file}.json --ignore-unfixed -s HIGH,CRITICAL,MEDIUM  "${file}"
-          sleep 20
-          mc cp ${file}.json myminio/images
-          cd ..
           rm -rf $file ${file}.gz

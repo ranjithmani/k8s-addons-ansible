@@ -1,0 +1,54 @@
+---
+- hosts: localhost
+  gather_facts: false
+  collections:
+    - kubernetes.core
+  vars:
+    istio_namespace: "istio-system"
+    minio_namespace: "minio"
+    minio_bucket_name: "loki"
+  environment:
+    - K8S_AUTH_KUBECONFIG: ./config
+  tasks:
+  - name: Install k8s Gateway API
+    k8s:
+      src: https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.3.0/standard-install.yaml
+      state: present
+
+  - name: Add Istio Helm repo
+    kubernetes.core.helm_repository:
+      name: istio
+      repo_url: https://istio-release.storage.googleapis.com/charts
+      state: present
+
+  - name: Create namespace if it doesn't exist
+    k8s:
+      name: "{{ istio_namespace }}"
+      api_version: v1
+      kind: Namespace
+      state: present
+  
+  - name: Deploy Istio base
+    kubernetes.core.helm:
+      name: istio-base
+      chart_ref: istio/base
+      release_namespace: "{{ istio_namespace }}"
+      state: present
+      values:
+        profile: ambient
+
+  - name: Deploy Istio CNI
+    kubernetes.core.helm:
+      name: istio-cni
+      chart_ref: istio/cni
+      release_namespace: "{{ istio_namespace }}"
+      state: present
+      values:
+        profile: ambient 
+
+  - name: Deploy Istio Dataplane 
+    kubernetes.core.helm:
+      name: ztunnel
+      chart_ref: istio/ztunnel
+      release_namespace: "{{ istio_namespace }}"
+      state: present

@@ -48,7 +48,7 @@ jobs:
         if: inputs.deploy_argocd
         working-directory: ./deploy-apps
         run: |
-          HELM_DIFF_THREE_WAY_MERGE=true helmfile apply -e argocd-helmfile.yaml  --selector tier=primary
+          HELM_DIFF_THREE_WAY_MERGE=true helmfile apply -f argocd-helmfile.yaml  --selector tier=primary
 
       - name: Wait for CRDs
         if: inputs.deploy_apps
@@ -68,4 +68,4 @@ jobs:
         if: inputs.deploy_apps
         working-directory: ./deploy-apps
         run: |
-          HELM_DIFF_THREE_WAY_MERGE=true helmfile apply -e argocd-apps-helmfile.yaml  --selector tier=secondary
+          HELM_DIFF_THREE_WAY_MERGE=true helmfile apply -f argocd-apps-helmfile.yaml  --selector tier=secondary

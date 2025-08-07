@@ -1,10 +1,11 @@
+repositories:
+  - name: argo
+    url: https://argoproj.github.io/argo-helm
+
 releases:
   - name: argocd
     namespace: argocd
     createNamespace: true
-    useYamlFile: false
-    useHelmRepo: true
-    repoURL: https://argoproj.github.io/argo-helm
     chart: argo/argo-cd
     version: 7.4.3
     values:

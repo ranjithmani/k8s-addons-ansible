@@ -1,0 +1,71 @@
+name: Apply Istio on K8S
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_argocd:
+        type: boolean
+        description: Deploy ArgoCD
+        required: true
+        default: false
+      deploy_apps:
+        type: boolean
+        description: Deploy Apps
+        required: true
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  bootstrap-argocd-apps:
+    runs-on: self-hosted
+    steps:
+      - name: Clean the Workspace
+        run: rm -rf ${{ github.workspace }}/*
+
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Set up PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Tools in Runner
+        working-directory: ./.github/workflows/scripts
+        run: |
+          chmod +x setup-tools-in-runner.sh
+          ./setup-tools-in-runner.sh
+
+      - name: Set KUBECONFIG
+        run: |
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
+
+      - name: Check k8s Nodes
+        run: kubectl get nodes
+      
+      - name: Deploy ArgoCD
+        if: inputs.deploy_argocd
+        working-directory: ./deploy-apps
+        run: |
+          HELM_DIFF_THREE_WAY_MERGE=true helmfile apply -e argocd-helmfile.yaml  --selector tier=primary
+
+      - name: Wait for CRDs
+        if: inputs.deploy_apps
+        run: |
+          #!/bin/bash
+          set -e
+          echo "Waiting for ArgoCD CRDs to be ready..."
+          for crd in applications.argoproj.io appprojects.argoproj.io applicationsets.argoproj.io; do
+            echo -n "Checking for $crd... "
+            until kubectl get crd "$crd" &>/dev/null; do
+              sleep 2
+            done
+            echo "✓"
+          done
+
+      - name: Deploy Apps
+        if: inputs.deploy_apps
+        working-directory: ./deploy-apps
+        run: |
+          HELM_DIFF_THREE_WAY_MERGE=true helmfile apply -e argocd-apps-helmfile.yaml  --selector tier=secondary

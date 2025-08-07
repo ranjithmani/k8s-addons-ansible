@@ -1,0 +1,5 @@
+apiVersion: v2
+name: argocd-app
+description: A reusable chart to generate ArgoCD Application CRs
+version: 0.1.0
+

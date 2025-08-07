@@ -1,0 +1,25 @@
+releases:
+  - name: istio
+    namespace: argocd
+    chart: ./charts/argocd-app
+    version: 0.1.0
+    values:
+      - component: istio
+        project: default
+        useYamlFile: false
+        useHelmRepo: true
+        repoURL: https://istio-release.storage.googleapis.com/charts
+        ChartName:
+          - istio-base
+          - istiod
+          - istio-cni
+          - istio-ztunnel
+        version: main
+        gitPath: manifests/kubevirt/v1.4.0
+        autoSync: true
+        namespace: istio-system
+        valuesObject:
+          profile: ambient
+    labels:
+      tier: secondary
+

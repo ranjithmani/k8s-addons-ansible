@@ -1,0 +1,13 @@
+releases:
+  - name: argocd
+    namespace: argocd
+    createNamespace: true
+    chart: argo/argo-cd
+    version: 7.4.3
+    values:
+      - server:
+          service:
+            type: LoadBalancer
+    labels:
+      tier: primary
+

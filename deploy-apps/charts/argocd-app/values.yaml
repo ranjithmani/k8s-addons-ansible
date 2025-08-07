@@ -1,0 +1,10 @@
+component: my-app
+project: default
+repoURL: ""
+version: main
+gitPath: ""
+autoSync: false
+namespace: default
+useYamlFile: false
+useHelmRepo: false
+

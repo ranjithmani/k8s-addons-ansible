@@ -18,6 +18,10 @@ releases:
         gitPath: manifests/kubevirt/v1.4.0
         autoSync: true
         namespace: istio-system
+        syncPolicy:
+          automated:
+            prune: true
+            selfHeal: true
         valuesObject:
           profile: ambient
     labels:

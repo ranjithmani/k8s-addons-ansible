@@ -8,8 +8,8 @@ spec:
   project: default
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
-    chart: istio
-    targetRevision: 1.26.3
+    chart: istio-base
+    targetRevision: base-1.26.3
     helm:
       values: |
         # Your custom values here

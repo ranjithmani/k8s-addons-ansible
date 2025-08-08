@@ -1,0 +1,15 @@
+server:
+  service:
+    type: LoadBalancer
+  config:
+    resource.customizations: |
+      admissionregistration.k8s.io/MutatingWebhookConfiguration:
+        health.lua: |
+          hs = {}
+          hs.status = "Healthy"
+          return hs
+      admissionregistration.k8s.io/ValidatingWebhookConfiguration:
+        health.lua: |
+          hs = {}
+          hs.status = "Healthy"
+          return hs

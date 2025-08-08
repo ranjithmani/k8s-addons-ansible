@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-addons
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ranjithmani/k8s-addons-ansible.git 
+    targetRevision: HEAD
+    path: cluster-setup/addons
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

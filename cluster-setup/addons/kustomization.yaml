@@ -1,0 +1,7 @@
+# addons/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- istio-app.yaml
+- metrics-server-app.yaml
+# Add other addons here

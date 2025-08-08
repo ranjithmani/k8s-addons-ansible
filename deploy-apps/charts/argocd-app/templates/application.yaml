@@ -1,28 +1,25 @@
+{{- range .Values.ChartName }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ .Values.component }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ . }}
+  namespace: argocd
 spec:
-  project: {{ .Values.project }}
-  source:
-    repoURL: {{ .Values.repoURL }}
-    targetRevision: {{ .Values.version }}
-{{- if .Values.useYamlFile }}
-    path: {{ .Values.gitPath }}
-{{- end }}
-{{- if .Values.useHelmRepo }}
-    chart: {{ .Values.component }}
-{{- end }}
+  project: {{ $.Values.project }}
   destination:
     server: https://kubernetes.default.svc
-    namespace: {{ .Values.namespace }}
+    namespace: {{ $.Values.namespace }}
+  source:
+    repoURL: {{ $.Values.repoURL }}
+    chart: {{ . }}
+    targetRevision: {{ $.Values.version }}
+    helm:
+      values: |
+        {{ toYaml $.Values.valuesObject | indent 8 }}
   syncPolicy:
-    {{- if .Values.autoSync }}
     automated:
       prune: true
       selfHeal: true
-    {{- else }}
-    {}
-    {{- end }}
+---
+{{- end }}
 

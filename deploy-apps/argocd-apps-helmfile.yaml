@@ -1,3 +1,7 @@
+repositories:
+  - name: argo
+    url: https://argoproj.github.io/argo-helm
+
 releases:
   - name: istio
     namespace: argocd
@@ -22,8 +26,9 @@ releases:
           automated:
             prune: true
             selfHeal: true
+          syncOptions:
+            - CreateNamespace=true
         valuesObject:
           profile: ambient
     labels:
       tier: secondary
-

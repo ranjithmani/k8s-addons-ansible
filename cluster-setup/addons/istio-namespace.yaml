@@ -12,6 +12,10 @@ spec:
     path: cluster-setup/addons/istio-namespace
     directory:
       recurse: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

@@ -4,7 +4,11 @@ kind: Application
 metadata:
   name: istio
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" 
 spec:
+  dependsOn:
+  - istio-namespace
   project: default
   source:
     repoURL: https://istio-release.storage.googleapis.com/charts
@@ -22,5 +26,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-    - CreateNamespace=true

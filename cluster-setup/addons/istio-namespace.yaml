@@ -1,0 +1,17 @@
+# cluster-setup/addons/istio-namespace.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-namespace
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ranjithmani/k8s-addons-ansible.git
+    targetRevision: HEAD
+    path: cluster-setup/addons/istio-namespace
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd

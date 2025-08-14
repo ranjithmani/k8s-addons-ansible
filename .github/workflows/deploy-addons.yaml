@@ -11,7 +11,11 @@ jobs:
         run: rm -rf ${{ github.workspace }}/*          
                                                        
       - name: Clone                                    
-        uses: actions/checkout@v4                      
+        uses: actions/checkout@v4              
+
+      - name: Set KUBECONFIG
+        run: |
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV        
                                                        
       - name: Set up PATH                              
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
@@ -24,6 +28,9 @@ jobs:
             --create-namespace \
             --values cluster-setup/argocd/values.yaml \
             --wait
+      - name: Create Namespace for Istio
+        run: |
+          kubectl create namespace istio-system
 
   deploy-addons:
     needs: install-argocd

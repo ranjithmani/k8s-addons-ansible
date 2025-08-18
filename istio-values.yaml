@@ -1,91 +1,72 @@
-# Minimal Istio installation with reduced metrics labels
-global:
-  hub: "docker.io/istio"
-  tag: "1.22.0"
-
-# Install istiod (control plane) + ingress gateway
 components:
+  ingressGateways:
+    - enabled: true
+      name: istio-ingressgateway
   pilot:
     enabled: true
-  ingressGateways:
-    - name: istio-ingressgateway
-      enabled: true
-  egressGateways:
-    - name: istio-egressgateway
-      enabled: false
 
-# Resource settings for istiod
-pilot:
-  resources:
-    requests:
-      cpu: "500m"
-      memory: "2048Mi"
-    limits:
-      cpu: "2000m"
-      memory: "4096Mi"
+global:
+  hub: docker.io/istio
+  tag: 1.22.0
 
-# Mesh config
 meshConfig:
-  defaultConfig:
-    proxyMetadata: {}
   enablePrometheusMerge: true
 
-# Telemetry configuration to reduce Prometheus labels
 telemetry:
   metrics:
     overrides:
-      - match:
-          metric: ALL_METRICS
-        tagOverrides:
-          # ✅ Keep only essential labels
-          source_app:
-            operation: KEEP
-          destination_app:
-            operation: KEEP
-          destination_service:
-            operation: KEEP
-          destination_workload:
-            operation: KEEP
-          destination_workload_namespace:
-            operation: KEEP
-          response_code:
-            operation: KEEP
-          reporter:
-            operation: KEEP
-          request_protocol:
-            operation: KEEP
-          security_istio_io_tlsMode:
-            operation: KEEP
+    - match:
+        metric: ALL_METRICS
+      tagOverrides:
+        # ✅ Keep these 10
+        source_app:
+          operation: KEEP
+        destination_app:
+          operation: KEEP
+        destination_workload:
+          operation: KEEP
+        destination_workload_namespace:
+          operation: KEEP
+        destination_service:
+          operation: KEEP
+        reporter:
+          operation: KEEP
+        request_protocol:
+          operation: KEEP
+        response_code:
+          operation: KEEP
+        security_istio_io_tlsMode:
+          operation: KEEP
+        connection_security_policy:
+          operation: KEEP
 
-          # ❌ Drop everything else
-          source_principal:
-            operation: REMOVE
-          source_workload:
-            operation: REMOVE
-          source_workload_namespace:
-            operation: REMOVE
-          source_version:
-            operation: REMOVE
-          destination_version:
-            operation: REMOVE
-          destination_principal:
-            operation: REMOVE
-          destination_service_name:
-            operation: REMOVE
-          destination_service_namespace:
-            operation: REMOVE
-          destination_canonical_service:
-            operation: REMOVE
-          destination_canonical_revision:
-            operation: REMOVE
-          source_canonical_service:
-            operation: REMOVE
-          source_canonical_revision:
-            operation: REMOVE
-          response_code_details:
-            operation: REMOVE
-          response_flags:
-            operation: REMOVE
-          connection_security_policy:
-            operation: REMOVE
+        # ❌ Remove everything else
+        source_version:
+          operation: REMOVE
+        source_workload:
+          operation: REMOVE
+        source_workload_namespace:
+          operation: REMOVE
+        source_canonical_service:
+          operation: REMOVE
+        source_canonical_revision:
+          operation: REMOVE
+        source_principal:
+          operation: REMOVE
+        destination_service_name:
+          operation: REMOVE
+        destination_service_namespace:
+          operation: REMOVE
+        destination_version:
+          operation: REMOVE
+        destination_canonical_service:
+          operation: REMOVE
+        destination_canonical_revision:
+          operation: REMOVE
+        destination_principal:
+          operation: REMOVE
+        response_code_details:
+          operation: REMOVE
+        response_flags:
+          operation: REMOVE
 

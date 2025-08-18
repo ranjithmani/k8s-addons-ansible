@@ -31,12 +31,16 @@ jobs:
         run: |
           helm repo add metallb https://metallb.github.io/metallb
           helm repo update
-          helm install metallb metallb/metallb -f metallb-values.yaml --namespace metallb-system --create-namespace
+          helm install metallb metallb/metallb --namespace metallb-system --create-namespace
       
       - name: Waiting for metallb to Ready
         run: |
           kubectl wait --for=condition=ready pod -l app=metallb -n metallb-system --timeout=300s
       
+      - name: apply the metallb config 
+        run: |
+          kubectl apply -f metallb-config.yaml
+
       - name: Verify ipaddress pools
         run: |
           kubectl get ipaddresspools.metallb.io -n metallb-system

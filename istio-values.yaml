@@ -18,9 +18,6 @@ components:
 # Telemetry configuration to reduce metrics labels
 telemetry:
   enabled: true
-  v2:
-    prometheus:
-      configOverride:
         gateway:
           # Reduce labels for gateway metrics
           enabled: true

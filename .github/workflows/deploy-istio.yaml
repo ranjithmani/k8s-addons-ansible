@@ -49,6 +49,19 @@ jobs:
     needs: install-metallb
     runs-on: self-hosted
     steps:
+      - name: Clean the Workspace
+        run: rm -rf ${{ github.workspace }}/*
+
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Set KUBECONFIG
+        run: |
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
+
+      - name: Set up PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Adding Istio Helm repository
         run: | 
           helm repo add istio https://istio-release.storage.googleapis.com/charts

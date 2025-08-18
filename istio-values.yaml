@@ -29,3 +29,49 @@ meshConfig:
     proxyMetadata: {}
   enablePrometheusMerge: true
 
+telemetry:
+  metrics:
+    overrides:
+      - match:
+          metric: ALL_METRICS
+        tagOverrides:
+          source_app:
+            operation: KEEP
+          destination_app:
+            operation: KEEP
+          destination_service:
+            operation: KEEP
+          destination_workload:
+            operation: KEEP
+          destination_workload_namespace:
+            operation: KEEP
+          response_code:
+            operation: KEEP
+          reporter:
+            operation: KEEP
+          request_protocol:
+            operation: KEEP
+          security_istio_io_tlsMode:
+            operation: KEEP
+          # Drop everything else
+          source_principal:
+            operation: REMOVE
+          destination_principal:
+            operation: REMOVE
+          destination_service_name:
+            operation: REMOVE
+          destination_service_namespace:
+            operation: REMOVE
+          source_workload:
+            operation: REMOVE
+          source_version:
+            operation: REMOVE
+          destination_version:
+            operation: REMOVE
+          response_code_details:
+            operation: REMOVE
+          response_flags:
+            operation: REMOVE
+          connection_security_policy:
+            operation: REMOVE
+

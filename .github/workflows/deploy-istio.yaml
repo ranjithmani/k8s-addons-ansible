@@ -69,11 +69,11 @@ jobs:
 
       - name: Install Istio base chart
         run: |
-          helm upgrade istio-base istio/base --namespace istio-system --create-namespace -f istio-values.yaml --wait
+          helm upgrade --install istio-base istio/base --namespace istio-system --create-namespace -f istio-values.yaml --wait
 
       - name: Install Istio Control plane
         run: |
-          helm upgrade istiod istio/istiod -n istio-system -f istio-values.yaml --wait
+          helm upgrade --install istiod istio/istiod -n istio-system -f istio-values.yaml --wait
 
       - name: Verify the istio installation
         run: |

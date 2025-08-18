@@ -79,4 +79,7 @@ jobs:
         run: |
           kubectl wait --for=condition=ready pod -l app=istiod -n istio-system --timeout=300s
           kubectl get pods -n istio-system
-
+    
+      - name: Apply the metrics striping 
+        run: |
+          kubectl apply -f reduce-metrics.yaml 

@@ -1,0 +1,39 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: reduce-metrics-labels
+  namespace: istio-system
+spec:
+  workloadSelector: {} # applies to all workloads, remove if you want to scope it
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: ANY
+      listener:
+        filterChain:
+          filter:
+            name: envoy.filters.network.http_connection_manager
+            subFilter:
+              name: envoy.filters.http.router
+    patch:
+      operation: MERGE
+      value:
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+          config:
+            vm_config:
+              runtime: envoy.wasm.runtime.null
+              code:
+                local:
+                  inline_string: envoy.wasm.metadata_exchange
+            configuration:
+              '@type': type.googleapis.com/google.protobuf.StringValue
+              value: |
+                metrics:
+                  stats:
+                    patterns:
+                      default:
+                        include_labels:
+                          - source_app
+                          - destination_app
+                          - response_code

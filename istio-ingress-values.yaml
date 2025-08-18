@@ -1,0 +1,16 @@
+# istio-ingress-values.yaml
+service:
+  type: LoadBalancer   # or NodePort / ClusterIP depending on your infra
+  ports:
+    - name: http2
+      port: 80
+      targetPort: 8080
+    - name: https
+      port: 443
+      targetPort: 8443
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+

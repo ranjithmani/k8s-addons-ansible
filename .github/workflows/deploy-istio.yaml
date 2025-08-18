@@ -79,6 +79,10 @@ jobs:
         run: |
           kubectl wait --for=condition=ready pod -l app=istiod -n istio-system --timeout=300s
           kubectl get pods -n istio-system
+
+      - name: Install ingress-gateway
+        run: |
+          helm upgrade --install istio-ingress istio/gateway -n istio-system -f istio-ingress-values.yaml --wait
     
       - name: Apply the metrics striping 
         run: |

@@ -1,0 +1,64 @@
+# Minimal Istio installation with reduced metrics labels
+global:
+  # Use a specific Istio version
+  tag: "1.22.0"
+  hub: "docker.io/istio"
+
+# Install only istiod (control plane)
+components:
+  pilot:
+    enabled: true
+  ingressGateways:
+    - name: istio-ingressgateway
+      enabled: true  # Disable ingress gateway for minimal setup
+  egressGateways:
+    - name: istio-egressgateway
+      enabled: false
+
+# Telemetry configuration to reduce metrics labels
+telemetry:
+  enabled: true
+  v2:
+    prometheus:
+      configOverride:
+        gateway:
+          # Reduce labels for gateway metrics
+          enabled: true
+          statPrefix: "istio"
+          labels:
+            # Keep only essential labels
+            - source_app
+            - destination_app
+            - response_code
+        sidecar:
+          # Reduce labels for sidecar metrics
+          enabled: true
+          statPrefix: "istio"
+          labels:
+            - source_app
+            - destination_app
+            - response_code
+        global:
+          # Global telemetry settings
+          enabled: true
+          statPrefix: "istio"
+          labels:
+            - source_app
+            - destination_app
+            - response_code
+
+# Resource settings for istiod
+pilot:
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "2048Mi"
+    limits:
+      cpu: "2000m"
+      memory: "4096Mi"
+
+# Enable namespace for Istio
+meshConfig:
+  defaultConfig:
+    proxyMetadata: {}
+  enablePrometheusMerge: true

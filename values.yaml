@@ -5,7 +5,7 @@
 # Global settings
 global:
   # Specify Istio version for easy upgrades
-  tag: 1.22.3
+  tag: 1.26.0
   hub: docker.io/istio
   # Default namespace for Istio components
   istioNamespace: istio-system

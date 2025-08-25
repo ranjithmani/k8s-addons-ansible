@@ -1,6 +1,6 @@
 # Istio Helm values.yaml configuration
 # Specifies Istio version and reduces labels for lower cardinality
-# Updated for compatibility with Istio 1.22.3 telemetry settings
+# Updated to fix sidecar injection issue
 
 # Global settings
 global:
@@ -14,15 +14,22 @@ global:
   proxy:
     # Customize pod annotations to limit labels
     podAnnotations:
-      # Retain essential labels for Prometheus scraping
       prometheus.io/scrape: "true"
       prometheus.io/port: "15090"
-      # Ensure sidecar injection
       sidecar.istio.io/inject: "true"
     # Reduce env variables that add unnecessary labels
     env:
       ISTIO_META_AUTO_REGISTER: "false"
       ISTIO_META_POD_ANNOTATION: ""
+
+  # Sidecar injector webhook configuration
+  sidecarInjectorWebhook:
+    # Use default injection template to avoid custom field errors
+    enableNamespacesByDefault: false
+    # Disable any experimental features
+    injectedAnnotations: {}
+    # Ensure no custom template is overriding defaults
+    template: ""
 
 # Istiod configuration
 pilot:

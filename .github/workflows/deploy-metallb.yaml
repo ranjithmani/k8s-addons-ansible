@@ -1,0 +1,46 @@
+name: Deploy Metallb
+
+on:
+  workflow_dispatch:
+
+jobs:
+  install-metallb:
+    runs-on: self-hosted
+    steps:
+      - name: Clean the Workspace
+        run: rm -rf ${{ github.workspace }}/*
+
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Set KUBECONFIG
+        run: |
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
+
+      - name: Set up PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Set the strictARP to true
+        run: |
+          echo "Configuring kube-proxy to enable strictARP..."
+          kubectl get configmap kube-proxy -n kube-system -o yaml | sed -e "s/strictARP: false/strictARP: true/" | kubectl apply -f - -n kube-system
+          echo "Verifying kube-proxy configuration..."
+          kubectl get configmap kube-proxy -n kube-system -o yaml | grep strictARP
+
+      - name: Install Metallb
+        run: |
+          helm repo add metallb https://metallb.github.io/metallb
+          helm repo update
+          helm upgrade --install metallb metallb/metallb --namespace metallb-system --create-namespace
+
+      - name: Waiting for metallb to Ready
+        run: |
+           kubectl wait --for=condition=ready pod -n metallb-system --all --timeout=300s
+
+      - name: apply the metallb config
+        run: |
+          kubectl apply -f metallb-config.yaml
+
+      - name: Verify ipaddress pools
+        run: |
+          kubectl get ipaddresspools.metallb.io -n metallb-system

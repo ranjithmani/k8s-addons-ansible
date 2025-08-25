@@ -1,0 +1,82 @@
+# Istio Helm values.yaml configuration
+# Specifies Istio version and reduces labels for lower cardinality
+
+# Global settings
+global:
+  # Specify Istio version for easy upgrades
+  tag: 1.22.3
+  hub: docker.io/istio
+  # Default namespace for Istio components
+  istioNamespace: istio-system
+
+  # Proxy settings to reduce labels
+  proxy:
+    # Customize pod annotations to limit labels
+    podAnnotations:
+      # Retain essential labels
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "15090"
+      # Remove non-essential labels
+      sidecar.istio.io/inject: "true"
+    # Reduce env variables that add unnecessary labels
+    env:
+      ISTIO_META_AUTO_REGISTER: "false"
+      ISTIO_META_POD_ANNOTATION: ""
+
+# Istiod configuration
+pilot:
+  # Reduce labels in Istiod pods
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "15014"
+  # Limit resource labels
+  env:
+    PILOT_FILTER_GATEWAY_CLUSTER_CONFIG: "true"
+    PILOT_ENABLE_CONFIG_DISTRIBUTION_TRACKING: "false"
+
+# Telemetry configuration to reduce Prometheus metrics cardinality
+telemetry:
+  enabled: true
+  v2:
+    prometheus:
+      enabled: true
+      # Reduce labels in Prometheus metrics
+      configOverride:
+        prometheus:
+          metrics:
+            # Limit labels to essential ones
+            enabledMetricLabels:
+              - app
+              - version
+              - istio
+              - istio.io/rev
+            # Explicitly disable high-cardinality labels
+            disabledMetricLabels:
+              - pod-template-hash
+              - controller-revision-hash
+              - kubernetes_pod_uid
+              - kubernetes_pod_name
+
+# Gateway configuration (optional)
+gateways:
+  istio-ingressgateway:
+    enabled: true
+    # Reduce labels in ingress gateway pods
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "15090"
+    # Limit labels in gateway metrics
+    env:
+      ISTIO_META_ROUTER_MODE: "sni-dnat"
+      ISTIO_META_REQUESTED_NETWORK_VIEW: ""
+
+# Mesh configuration
+meshConfig:
+  # Disable unnecessary metadata exchange to reduce labels
+  enableAutoMtls: true
+  enablePrometheusMerge: true
+  defaultConfig:
+    proxyMetadata:
+      # Minimize proxy metadata to reduce labels
+      ISTIO_META_DNS_CAPTURE: "false"
+      ISTIO_META_POD_NAME: ""

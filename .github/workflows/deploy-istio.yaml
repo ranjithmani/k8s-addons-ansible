@@ -69,11 +69,11 @@ jobs:
 
       - name: Install Istio base chart
         run: |
-          helm upgrade --install istio-base istio/base --namespace istio-system --create-namespace -f istio-values.yaml --wait
+          helm upgrade --install istio-base istio/base --namespace istio-system --create-namespace -f values.yaml --wait
 
       - name: Install Istio Control plane
         run: |
-          helm upgrade --install istiod istio/istiod -n istio-system -f istio-values.yaml --wait
+          helm upgrade --install istiod istio/istiod -n istio-system -f values.yaml --wait
 
       - name: Verify the istio installation
         run: |
@@ -82,7 +82,7 @@ jobs:
 
       - name: Install ingress-gateway
         run: |
-          helm upgrade --install istio-ingress istio/gateway -n istio-system -f istio-ingress-values.yaml --wait
+          helm upgrade --install istio-ingress istio/gateway -n istio-system -f values.yaml --wait
     
           #- name: Apply the metrics striping 
           #run: |

@@ -46,7 +46,7 @@ jobs:
           kubectl get ipaddresspools.metallb.io -n metallb-system
 
   deploy-istio:
-    needs: install-metallb
+    needs: install-metallb1
     runs-on: self-hosted
     steps:
       - name: Clean the Workspace

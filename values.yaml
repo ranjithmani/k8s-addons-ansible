@@ -1,5 +1,6 @@
 # Istio Helm values.yaml configuration
 # Specifies Istio version and reduces labels for lower cardinality
+# Updated for compatibility with Istio 1.22.3 telemetry settings
 
 # Global settings
 global:
@@ -13,10 +14,10 @@ global:
   proxy:
     # Customize pod annotations to limit labels
     podAnnotations:
-      # Retain essential labels
+      # Retain essential labels for Prometheus scraping
       prometheus.io/scrape: "true"
       prometheus.io/port: "15090"
-      # Remove non-essential labels
+      # Ensure sidecar injection
       sidecar.istio.io/inject: "true"
     # Reduce env variables that add unnecessary labels
     env:
@@ -40,22 +41,21 @@ telemetry:
   v2:
     prometheus:
       enabled: true
-      # Reduce labels in Prometheus metrics
-      configOverride:
-        prometheus:
-          metrics:
-            # Limit labels to essential ones
-            enabledMetricLabels:
-              - app
-              - version
-              - istio
-              - istio.io/rev
-            # Explicitly disable high-cardinality labels
-            disabledMetricLabels:
-              - pod-template-hash
-              - controller-revision-hash
-              - kubernetes_pod_uid
-              - kubernetes_pod_name
+      # Configure Prometheus metrics to limit labels
+      config:
+        metrics:
+          # Limit labels to essential ones for common use cases
+          enabledMetricLabels:
+            - app
+            - version
+            - istio
+            - istio.io/rev
+          # Explicitly disable high-cardinality labels
+          disabledMetricLabels:
+            - pod-template-hash
+            - controller-revision-hash
+            - kubernetes_pod_uid
+            - kubernetes_pod_name
 
 # Gateway configuration (optional)
 gateways:

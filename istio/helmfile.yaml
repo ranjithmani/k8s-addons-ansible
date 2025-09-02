@@ -1,0 +1,31 @@
+repositories:
+  - name: istio
+    url: https://istio-release.storage.googleapis.com/charts
+
+
+values:
+  - values.yaml
+
+releases:
+  - name: istio-base
+    namespace: istio-system
+    chart: istio/base
+    version: {{ .Values.istio.version }}
+    createNamespace: true
+    values:
+      - values.yaml
+
+  - name: istiod
+    namespace: istio-system
+    chart: istio/istiod
+    version: {{ .Values.istio.version }}
+    values:
+      - values.yaml
+
+  - name: istio-ingress
+    namespace: istio-system
+    chart: istio/gateway
+    version: {{ .Values.istio.version }}
+    values:
+      - values.yaml
+

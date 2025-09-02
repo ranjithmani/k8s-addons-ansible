@@ -62,27 +62,10 @@ jobs:
       - name: Set up PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Adding Istio Helm repository
-        run: | 
-          helm repo add istio https://istio-release.storage.googleapis.com/charts
-          helm repo update
-
-      - name: Install Istio base chart
+      - name: Install Istio
         run: |
-          helm upgrade --install istio-base istio/base --namespace istio-system --create-namespace -f values.yaml --wait
-
-      - name: Install Istio Control plane
-        run: |
-          helm upgrade --install istiod istio/istiod -n istio-system -f values.yaml --wait
-
-      - name: Verify the istio installation
-        run: |
-          kubectl wait --for=condition=ready pod -l app=istiod -n istio-system --timeout=300s
-          kubectl get pods -n istio-system
-
-      - name: Install ingress-gateway
-        run: |
-          helm upgrade --install istio-ingress istio/gateway -n istio-system -f values.yaml --wait
+          cd istio/
+          helmfile apply 
     
           #- name: Apply the metrics striping 
           #run: |

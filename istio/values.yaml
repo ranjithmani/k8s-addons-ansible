@@ -1,9 +1,9 @@
 istio:
-  version: 1.25.3   
+  version: 1.26.2 
 
 global:
   hub: docker.io/istio
-  tag: 1.25.3
+  tag: 1.26.2
   proxy:
     autoInject: enabled   
 
